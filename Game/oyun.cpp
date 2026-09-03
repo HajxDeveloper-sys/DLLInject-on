@@ -7,9 +7,6 @@
 #include <cstdlib>
 #include <ctime>
 
-// ==========================================
-// 1. OYUNCU VE ISTATISTIK VERI YAPISI
-// ==========================================
 struct Player {
     char name[32];
     int level;
@@ -25,25 +22,19 @@ struct Player {
     int healthPotions;
     int manaPotions;
 
-    // Istatistikler
     int monstersKilled;
     int bossesKilled;
     int totalDamageDealt;
     int totalGoldEarned;
-    bool godMode; // Hile / Mod tarafindan kilitlenebilir
+    bool godMode;
 };
 
-// Global oyuncu ornegi
 Player g_player;
 
-// DLL Injection icin fonksiyonu disa aktariyoruz (Export)
 extern "C" __declspec(dllexport) Player* GetPlayerInstance() {
     return &g_player;
 }
 
-// ==========================================
-// 2. KONSOL GORSEL VE IMLEC AYARLARI
-// ==========================================
 void ShowConsoleCursor(bool show) {
     HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO cursorInfo;
@@ -61,15 +52,12 @@ void ResetCursor() {
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-// ==========================================
-// 3. SES EFEKTLERI SISTEMI (Windows Beep)
-// ==========================================
 namespace Sound {
     void MenuTick() {
-        Beep(800, 20); // Ok tusuna basinca cikan hos menu sesi
+        Beep(800, 20);
     }
     void MenuSelect() {
-        Beep(1200, 50); // Enter sesi
+        Beep(1200, 50);
     }
     void MenuError() {
         Beep(250, 100);
@@ -122,9 +110,6 @@ namespace Sound {
     }
 }
 
-// ==========================================
-// 4. OK TUSLARI ILE ANIMASYONLU MENÜ SISTEMI
-// ==========================================
 int SelectMenu(const std::string& title, const std::vector<std::string>& options, int defaultSelected = 0) {
     ShowConsoleCursor(false);
     int selected = defaultSelected;
@@ -133,20 +118,18 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
     while (true) {
         system("cls");
 
-        // Baslik Yazdir
         SetColor(11);
         std::cout << "\n===============================================================\n";
         std::cout << " " << title << "\n";
         std::cout << "===============================================================\n\n";
         SetColor(7);
 
-        // Secenekleri listele
         for (int i = 0; i < total; i++) {
             if (i == selected) {
-                SetColor(14); // Parlak Sari
+                SetColor(14);
                 std::cout << "  ►  [ " << options[i] << " ]  ◄\n";
             } else {
-                SetColor(8); // Gri / Soluk
+                SetColor(8);
                 std::cout << "     " << options[i] << "\n";
             }
         }
@@ -157,20 +140,19 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
         std::cout << "---------------------------------------------------------------\n";
         SetColor(7);
 
-        // Tus girisini yakala
         int key = _getch();
-        if (key == 0 || key == 224) { // Yon tuslari
+        if (key == 0 || key == 224) {
             int arrow = _getch();
-            if (arrow == 72) { // YUKARI OK
+            if (arrow == 72) {
                 selected--;
                 if (selected < 0) selected = total - 1;
                 Sound::MenuTick();
-            } else if (arrow == 80) { // ASAGI OK
+            } else if (arrow == 80) {
                 selected++;
                 if (selected >= total) selected = 0;
                 Sound::MenuTick();
             }
-        } else if (key == 13) { // ENTER
+        } else if (key == 13) {
             Sound::MenuSelect();
             ShowConsoleCursor(true);
             return selected;
@@ -178,9 +160,6 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
     }
 }
 
-// ==========================================
-// 5. SAGLIK VE GORSEL EFEKTLER
-// ==========================================
 void DrawHealthBar(int current, int max, int barLength = 22) {
     if (current < 0) current = 0;
     float ratio = (float)current / (float)max;
@@ -188,9 +167,9 @@ void DrawHealthBar(int current, int max, int barLength = 22) {
     if (filled > barLength) filled = barLength;
 
     std::cout << "[";
-    if (ratio > 0.5f) SetColor(10); // Yesil
-    else if (ratio > 0.25f) SetColor(14); // Sari
-    else SetColor(12); // Kirmizi
+    if (ratio > 0.5f) SetColor(10);
+    else if (ratio > 0.25f) SetColor(14);
+    else SetColor(12);
 
     for (int i = 0; i < filled; i++) std::cout << "=";
     SetColor(8);
@@ -211,9 +190,6 @@ void FlashScreen(int colorCode, const std::string& message) {
     std::cout << "\n";
 }
 
-// ==========================================
-// 6. KAYIT (SAVE & LOAD)
-// ==========================================
 bool SaveGame() {
     std::ofstream file("savegame.dat", std::ios::binary);
     if (!file) return false;
@@ -276,9 +252,6 @@ void CheckLevelUp() {
     }
 }
 
-// ==========================================
-// 7. HUD VE BILGI PANELI
-// ==========================================
 void ShowHUD() {
     if (g_player.godMode) {
         g_player.hp = g_player.maxHp;
@@ -299,19 +272,16 @@ void ShowHUD() {
     DrawHealthBar(g_player.hp, g_player.maxHp);
     std::cout << "  |  MANA: " << g_player.mana << "/" << g_player.maxMana << "\n";
 
-    std::cout << " GUC  : Saldiri " << g_player.attack 
-              << " | Defans " << g_player.defense 
+    std::cout << " GUC  : Saldiri " << g_player.attack
+              << " | Defans " << g_player.defense
               << " | Altin: " << g_player.gold << " G\n";
-    std::cout << " CANTA: " << g_player.healthPotions << "x Can Iksiri | " 
+    std::cout << " CANTA: " << g_player.healthPotions << "x Can Iksiri | "
               << g_player.manaPotions << "x Mana Iksiri | EXP: " << g_player.exp << "/" << g_player.expToNext << "\n";
     SetColor(11);
     std::cout << "===============================================================\n";
     SetColor(7);
 }
 
-// ==========================================
-// 8. CANAVARLAR VE SAVAS
-// ==========================================
 struct Monster {
     std::string name;
     int hp;
@@ -340,7 +310,7 @@ void Battle(Monster m) {
         if (g_player.godMode) g_player.hp = g_player.maxHp;
 
         std::string battleHeader = "SAVAS: " + m.name + " (HP: " + std::to_string(m.hp) + "/" + std::to_string(m.maxHp) + ") | SENIN CANIN: " + std::to_string(g_player.hp) + "/" + std::to_string(g_player.maxHp);
-        
+
         std::vector<std::string> battleActions = {
             "Kilic Saldirisi (Temel Vurus)",
             "Ates Topu Buyusu (15 Mana - Agir Hasar)",
@@ -353,7 +323,7 @@ void Battle(Monster m) {
         int act = SelectMenu(battleHeader, battleActions, 0);
 
         system("cls");
-        if (act == 0) { // Kilic
+        if (act == 0) {
             int dmg = (g_player.attack + (rand() % 8)) - (m.defense / 2);
             if (dmg < 4) dmg = 4;
             bool crit = (rand() % 4 == 0);
@@ -368,7 +338,7 @@ void Battle(Monster m) {
             g_player.totalDamageDealt += dmg;
             std::cout << ">> " << m.name << " uzerine kilicini savurdun! " << dmg << " fiziksel hasar!\n";
 
-        } else if (act == 1) { // Ates Topu
+        } else if (act == 1) {
             if (g_player.mana >= 15) {
                 g_player.mana -= 15;
                 int dmg = (g_player.attack * 2) + (rand() % 20);
@@ -384,7 +354,7 @@ void Battle(Monster m) {
                 continue;
             }
 
-        } else if (act == 2) { // Yildirim
+        } else if (act == 2) {
             if (g_player.mana >= 30) {
                 g_player.mana -= 30;
                 int dmg = (g_player.attack * 3) + 25 + (rand() % 25);
@@ -400,7 +370,7 @@ void Battle(Monster m) {
                 continue;
             }
 
-        } else if (act == 3) { // Can Iksiri
+        } else if (act == 3) {
             if (g_player.healthPotions > 0) {
                 g_player.healthPotions--;
                 int heal = g_player.maxHp * 0.5f;
@@ -415,7 +385,7 @@ void Battle(Monster m) {
                 continue;
             }
 
-        } else if (act == 4) { // Mana Iksiri
+        } else if (act == 4) {
             if (g_player.manaPotions > 0) {
                 g_player.manaPotions--;
                 g_player.mana = g_player.maxMana;
@@ -428,7 +398,7 @@ void Battle(Monster m) {
                 continue;
             }
 
-        } else if (act == 5) { // Kac
+        } else if (act == 5) {
             if (!m.isBoss && rand() % 2 == 0) {
                 std::cout << ">> Sislerin arasina dalarak kactin!\n";
                 Sleep(1000);
@@ -438,7 +408,6 @@ void Battle(Monster m) {
             }
         }
 
-        // Canavar oldu mu?
         if (m.hp <= 0) {
             SetColor(10);
             std::cout << "\n============================================\n";
@@ -460,7 +429,6 @@ void Battle(Monster m) {
             return;
         }
 
-        // Dusman saldirisi
         Sleep(600);
         int mDmg = (m.attack + (rand() % 6)) - (g_player.defense / 2);
         if (mDmg < 3) mDmg = 3;
@@ -488,9 +456,6 @@ void Battle(Monster m) {
     }
 }
 
-// ==========================================
-// 9. KASABA VE PAZAR
-// ==========================================
 void TownShop() {
     while (true) {
         std::vector<std::string> shopItems = {
@@ -533,9 +498,6 @@ void TownShop() {
     }
 }
 
-// ==========================================
-// 10. ISTATISTIKLER EKRANI
-// ==========================================
 void ViewStats() {
     system("cls");
     SetColor(11);
@@ -558,17 +520,13 @@ void ViewStats() {
     _getch();
 }
 
-// ==========================================
-// 11. ANA DONGU VE BASLANGIC
-// ==========================================
 int main() {
-    SetConsoleOutputCP(65001); // UTF-8
+    SetConsoleOutputCP(65001);
     SetConsoleTitleA("Efsanevi Golge RPG - Enhanced Edition");
     srand((unsigned int)time(NULL));
 
     DWORD pid = GetCurrentProcessId();
 
-    // Baslangic Menusu (Ok Tuslari ile)
     std::string saveInfo = HasSaveGame() ? "2. Kayitli Oyunu Yukle (KAYIT MEVCUT)" : "2. Kayitli Oyunu Yukle (KAYIT BULUNAMADI)";
     std::vector<std::string> startMenu = {
         "1. Yeni Maceraya Basla",
@@ -600,10 +558,9 @@ int main() {
         return 0;
     }
 
-    // Oyun Dongusu (Ok Tuslari ile)
     while (true) {
-        std::string title = "GOLGE DIYARI - KAHRAMAN: " + std::string(g_player.name) + 
-                            " (Lvl " + std::to_string(g_player.level) + ") | HP: " + 
+        std::string title = "GOLGE DIYARI - KAHRAMAN: " + std::string(g_player.name) +
+                            " (Lvl " + std::to_string(g_player.level) + ") | HP: " +
                             std::to_string(g_player.hp) + "/" + std::to_string(g_player.maxHp) +
                             " | Altin: " + std::to_string(g_player.gold) + " G";
 
@@ -619,7 +576,7 @@ int main() {
 
         int act = SelectMenu(title, actions, 0);
 
-        if (act == 0) { // Zindan
+        if (act == 0) {
             Monster mobs[] = {
                 {"Goblin Casusu", 50, 50, 14, 4, 30, 40, false},
                 {"Lanetli Iskelet", 80, 80, 20, 8, 50, 65, false},
@@ -628,24 +585,24 @@ int main() {
             };
             Battle(mobs[rand() % 4]);
 
-        } else if (act == 1) { // Boss
+        } else if (act == 1) {
             Monster boss = {"KADIM ATES EJDERHASI", 450, 450, 48, 20, 600, 500, true};
             Battle(boss);
 
-        } else if (act == 2) { // Kasaba
+        } else if (act == 2) {
             TownShop();
 
-        } else if (act == 3) { // Dinlen
+        } else if (act == 3) {
             g_player.hp = g_player.maxHp;
             g_player.mana = g_player.maxMana;
             Sound::Heal();
             FlashScreen(10, "KAMP ATESI YANDI! CAN VE MANA DOLDURULDU!");
             Sleep(800);
 
-        } else if (act == 4) { // Istatistik
+        } else if (act == 4) {
             ViewStats();
 
-        } else if (act == 5) { // Save
+        } else if (act == 5) {
             if (SaveGame()) {
                 Sound::Coin();
                 FlashScreen(10, "OYUN BASARIYLA KAYDEDILDI (savegame.dat)");
@@ -655,7 +612,7 @@ int main() {
             }
             Sleep(800);
 
-        } else if (act == 6) { // Cikis
+        } else if (act == 6) {
             std::cout << "\nMacera sonlandirildi. Gorusmek uzere!\n";
             break;
         }

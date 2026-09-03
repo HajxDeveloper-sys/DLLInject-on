@@ -28,7 +28,6 @@ namespace Sound {
     }
 }
 
-// Ok tuslari ile secim menusu
 int SelectMenu(const std::string& title, const std::vector<std::string>& options) {
     ShowCursor(false);
     int selected = 0;
@@ -36,7 +35,7 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
 
     while (true) {
         system("cls");
-        SetColor(11); // Acik Mavi
+        SetColor(11);
         std::cout << "\n===============================================================\n";
         std::cout << " " << title << "\n";
         std::cout << "===============================================================\n\n";
@@ -44,10 +43,10 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
 
         for (int i = 0; i < total; i++) {
             if (i == selected) {
-                SetColor(14); // Parlak Sari
+                SetColor(14);
                 std::cout << "  ►  [ " << options[i] << " ]  ◄\n";
             } else {
-                SetColor(8); // Soluk Gri
+                SetColor(8);
                 std::cout << "     " << options[i] << "\n";
             }
         }
@@ -61,16 +60,16 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
         int key = _getch();
         if (key == 0 || key == 224) {
             int arrow = _getch();
-            if (arrow == 72) { // YUKARI
+            if (arrow == 72) {
                 selected--;
                 if (selected < 0) selected = total - 1;
                 Sound::Tick();
-            } else if (arrow == 80) { // ASAGI
+            } else if (arrow == 80) {
                 selected++;
                 if (selected >= total) selected = 0;
                 Sound::Tick();
             }
-        } else if (key == 13) { // ENTER
+        } else if (key == 13) {
             Sound::Select();
             ShowCursor(true);
             return selected;
@@ -78,7 +77,6 @@ int SelectMenu(const std::string& title, const std::vector<std::string>& options
     }
 }
 
-// Isme gore Process ID (PID) arama
 DWORD FindProcessByName(const char* processName) {
     DWORD pid = 0;
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -98,7 +96,6 @@ DWORD FindProcessByName(const char* processName) {
     return pid;
 }
 
-// DLL Enjeksiyon Islemi
 bool PerformInjection(DWORD pid, const char* dllName) {
     char fullDllPath[MAX_PATH];
     if (!GetFullPathNameA(dllName, MAX_PATH, fullDllPath, NULL)) {
@@ -108,7 +105,6 @@ bool PerformInjection(DWORD pid, const char* dllName) {
         return false;
     }
 
-    // Dosya gercekten var mi kontrol et
     if (GetFileAttributesA(fullDllPath) == INVALID_FILE_ATTRIBUTES) {
         SetColor(12);
         std::cerr << "[-] Hata: '" << dllName << "' dosyasi klasorde bulunamadi!\n";
@@ -202,7 +198,7 @@ int main() {
 
         int choice = SelectMenu("GELISMIS DLL INJECTOR PANELI", menuOptions);
 
-        if (choice == 0) { // 1. OTOMATIK TARAMA
+        if (choice == 0) {
             system("cls");
             SetColor(11);
             std::cout << "\n[+] Arkada calisan '" << targetExeName << "' araniyor...\n";
@@ -230,7 +226,7 @@ int main() {
                 _getch();
             }
 
-        } else if (choice == 1) { // 2. MANUEL PID GIRISI
+        } else if (choice == 1) {
             system("cls");
             SetColor(14);
             std::cout << "\n--- MANUEL PID ILE ENJEKSIYON ---\n";
@@ -246,7 +242,7 @@ int main() {
                 std::cin.ignore(1000, '\n');
             }
 
-        } else if (choice == 2) { // 3. CIKIS
+        } else if (choice == 2) {
             std::cout << "\nInjector sonlandirildi.\n";
             break;
         }
